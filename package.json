@@ -6,22 +6,38 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cron": "npx ts-node --skip-project scripts/cron-local.ts"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "cheerio": "^1.2.0",
     "next": "16.3.4",
+    "playwright": "^1.62.1",
+    "prisma": "^5.22.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "resend": "^6.25.0",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.43",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   },
-  "packageManager": "pnpm@11.9.0"
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "pnpm": {
+    "overrides": {
+      "lightningcss": "1.32.0"
+    }
+  }
 }
