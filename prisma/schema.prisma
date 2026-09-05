@@ -131,6 +131,23 @@ model ClientProfile {
   flightsPerYear    Int     @default(4)
   preferredCabin    String  @default("business")
 
+  // Situation bancaire
+  mainBank          String?
+  annualIncomeRange String?
+  hasExistingAmex   Boolean @default(false)
+  isHomeowner       Boolean @default(false)
+
+  // Comportement de voyage
+  mainAirline       String?
+  travelType        String?
+  departureCity     String?
+
+  // Statuts programmes
+  flyingBlueStatus  String?
+  aviosStatus       String?
+  marriottStatus    String?
+  hiltonStatus      String?
+
   targetProgramCode String?
   targetMiles       Int?
   deadlineMonths    Int?

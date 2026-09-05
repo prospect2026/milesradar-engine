@@ -64,6 +64,27 @@ interface PlanResult {
 
 const fmt = (n: number) => n.toLocaleString("fr-FR");
 
+function parseNotes(notes: string) {
+  return {
+    condition: notes.match(/Condition\s*:\s*([^.]+)/i)?.[1]?.trim(),
+    delay: notes.match(/Délai\s*[^:]*:\s*([^.]+)/i)?.[1]?.trim(),
+    eligibility: notes.match(/Éligibilité\s*:\s*([^.]+)/i)?.[1]?.trim(),
+    steps: notes.match(/Étape\s*\d+\s*:\s*([^\n.]+)/gi)?.map(s => s.trim()),
+  };
+}
+
+const TYPE_LABELS: Record<string, { label: string; bg: string; text: string }> = {
+  credit_card: { label: "Carte", bg: "bg-blue-100", text: "text-blue-700" },
+  portal: { label: "Portail", bg: "bg-green-100", text: "text-green-700" },
+  transfer: { label: "Transfert", bg: "bg-amber-100", text: "text-amber-700" },
+  transfer_bonus: { label: "Bonus transfert", bg: "bg-amber-100", text: "text-amber-700" },
+  hotel: { label: "Hôtel", bg: "bg-purple-100", text: "text-purple-700" },
+  dining: { label: "Dining", bg: "bg-orange-100", text: "text-orange-700" },
+  referral: { label: "Parrainage", bg: "bg-teal-100", text: "text-teal-700" },
+  status_run: { label: "Status Run", bg: "bg-red-100", text: "text-red-700" },
+  shopping: { label: "Shopping", bg: "bg-pink-100", text: "text-pink-700" },
+};
+
 export default function GoalPage() {
   const [programs, setPrograms] = useState<ProgramOption[]>([]);
   const [email, setEmail] = useState("");
@@ -72,7 +93,6 @@ export default function GoalPage() {
   const [deadlineMonths, setDeadlineMonths] = useState(12);
   const [budgetMonthly, setBudgetMonthly] = useState(500);
 
-  // Inline profile fields (when no saved profile)
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [monthlySpendEur, setMonthlySpendEur] = useState(1000);
   const [hasAmexGold, setHasAmexGold] = useState(false);
@@ -155,6 +175,17 @@ export default function GoalPage() {
     if (pct >= 1) return "bg-green-500";
     if (pct >= 0.8) return "bg-orange-400";
     return "bg-red-400";
+  };
+
+  const confidenceBar = (score: number) => {
+    const filled = Math.round(score / 10);
+    const empty = 10 - filled;
+    const color = score >= 90 ? "text-green-600" : score >= 70 ? "text-teal-600" : "text-yellow-600";
+    return (
+      <span className={`text-xs font-mono ${color}`}>
+        [{"█".repeat(filled)}{"░".repeat(empty)}] {score}%
+      </span>
+    );
   };
 
   return (
@@ -384,39 +415,75 @@ export default function GoalPage() {
                   </div>
                 )}
 
-                {/* Actions List */}
+                {/* Actions List — ENRICHED */}
                 <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">Actions du plan</h3>
-                  <div className="space-y-4">
-                    {result.actions.map((a) => (
-                      <div key={a.rank} className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-sm font-bold">
-                          {a.rank}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-gray-900 text-sm">{a.title}</p>
-                            {a.confidenceScore === 95 && (
-                              <span className="text-xs bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded animate-pulse">LIVE</span>
-                            )}
-                            {a.isPriority && a.confidenceScore !== 95 && <span className="text-xs bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">Priorité</span>}
+                  <div className="space-y-5">
+                    {result.actions.map((a) => {
+                      const parsed = a.notes ? parseNotes(a.notes) : null;
+                      const typeInfo = TYPE_LABELS[a.type] || { label: a.type, bg: "bg-gray-100", text: "text-gray-700" };
+
+                      return (
+                        <div key={a.rank} className="border border-gray-100 rounded-lg p-4 hover:border-gray-200 transition-colors">
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-sm font-bold">
+                              {a.rank}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              {/* Title row */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-semibold text-gray-900 text-sm">{a.title}</p>
+                                <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${typeInfo.bg} ${typeInfo.text}`}>{typeInfo.label}</span>
+                                {a.confidenceScore === 95 && (
+                                  <span className="text-xs bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded animate-pulse">LIVE</span>
+                                )}
+                                {a.isPriority && a.confidenceScore !== 95 && <span className="text-xs bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">Priorité</span>}
+                              </div>
+
+                              {/* Full description */}
+                              <p className="text-xs text-gray-600 mt-1.5 leading-relaxed">{a.description}</p>
+
+                              {a.confidenceScore === 95 && (
+                                <p className="text-xs text-red-600 font-medium mt-1">Deal vérifié aujourd&apos;hui — agir rapidement</p>
+                              )}
+
+                              {/* Parsed structured details */}
+                              {parsed && (parsed.condition || parsed.eligibility || parsed.delay || parsed.steps) && (
+                                <div className="mt-2 space-y-1 text-xs">
+                                  {parsed.condition && (
+                                    <p className="text-gray-700"><span className="font-semibold text-gray-900">Condition :</span> {parsed.condition}</p>
+                                  )}
+                                  {parsed.eligibility && (
+                                    <p className="text-gray-700"><span className="font-semibold text-gray-900">Éligibilité :</span> {parsed.eligibility}</p>
+                                  )}
+                                  {parsed.delay && (
+                                    <p className="text-gray-700"><span className="font-semibold text-gray-900">Délai :</span> {parsed.delay}</p>
+                                  )}
+                                  {parsed.steps && parsed.steps.length > 0 && (
+                                    <div className="mt-1">
+                                      {parsed.steps.map((step, i) => (
+                                        <p key={i} className="text-gray-600 pl-2">{step}</p>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Meta row */}
+                              <div className="flex items-center gap-4 mt-2">
+                                <span className="text-xs text-gray-400">Mois {a.monthStart}</span>
+                                {confidenceBar(a.confidenceScore)}
+                              </div>
+                            </div>
+
+                            {/* Miles estimate */}
+                            <p className="text-sm font-bold text-teal-600 whitespace-nowrap pl-2">
+                              {fmt(a.milesEstimate)} mi
+                            </p>
                           </div>
-                          <p className="text-xs text-gray-500 mt-0.5">{a.description}</p>
-                          {a.confidenceScore === 95 && (
-                            <p className="text-xs text-red-600 font-medium mt-0.5">Deal vérifié aujourd&apos;hui — agir rapidement</p>
-                          )}
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-xs text-gray-400">Mois {a.monthStart}</span>
-                            <span className={`text-xs px-1.5 py-0.5 rounded ${a.confidenceScore >= 95 ? "bg-red-100 text-red-700" : a.confidenceScore > 70 ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                              {a.confidenceScore >= 95 ? "Deal LIVE" : a.confidenceScore > 70 ? "Vérifié" : "Estimé ~"}
-                            </span>
-                          </div>
                         </div>
-                        <p className="text-sm font-semibold text-teal-600 whitespace-nowrap">
-                          {fmt(a.milesEstimate)} mi
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
