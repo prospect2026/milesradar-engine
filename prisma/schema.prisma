@@ -148,6 +148,27 @@ model ClientProfile {
   marriottStatus    String?
   hiltonStatus      String?
 
+  // Historique de demandes de cartes
+  newCardsLast24Months Int  @default(0)
+
+  // Dépenses par catégorie (euros/mois)
+  spendTravel       Int     @default(0)
+  spendDining       Int     @default(0)
+  spendGroceries    Int     @default(0)
+  spendOnline       Int     @default(0)
+  spendOther        Int     @default(0)
+
+  // Voyage
+  homeAirport           String?
+  nextTripDestination   String?
+  nextTripDate          DateTime?
+  nextTripCabin         String?
+
+  // Soldes principaux
+  flyingBlueBalance Int     @default(0)
+  aviosBalance      Int     @default(0)
+  amexMRBalance     Int     @default(0)
+
   targetProgramCode String?
   targetMiles       Int?
   deadlineMonths    Int?

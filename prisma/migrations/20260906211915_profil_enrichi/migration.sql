@@ -1,0 +1,14 @@
+-- AlterTable
+ALTER TABLE "ClientProfile" ADD COLUMN     "amexMRBalance" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "aviosBalance" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "flyingBlueBalance" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "homeAirport" TEXT,
+ADD COLUMN     "newCardsLast24Months" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "nextTripCabin" TEXT,
+ADD COLUMN     "nextTripDate" TIMESTAMP(3),
+ADD COLUMN     "nextTripDestination" TEXT,
+ADD COLUMN     "spendDining" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "spendGroceries" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "spendOnline" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "spendOther" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "spendTravel" INTEGER NOT NULL DEFAULT 0;

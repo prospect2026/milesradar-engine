@@ -25,70 +25,33 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-
-  const {
-    email,
-    firstName,
-    lastName,
-    country,
-    region,
-    hasAmexGold,
-    hasAmexPlatine,
-    hasVisaInfinite,
-    hasMarriottCard,
-    hasHiltonCard,
-    hasAirlineCard,
-    hasChaseCard,
-    hasCitiCard,
-    monthlySpendEur,
-    flightsPerYear,
-    preferredCabin,
-    mainBank,
-    annualIncomeRange,
-    hasExistingAmex,
-    isHomeowner,
-    mainAirline,
-    travelType,
-    departureCity,
-    flyingBlueStatus,
-    aviosStatus,
-    marriottStatus,
-    hiltonStatus,
-    balances,
-  } = body;
+  const { email, balances, ...fields } = body;
 
   if (!email) {
     return NextResponse.json({ error: "Email requis" }, { status: 400 });
   }
 
-  const profileData = {
-    firstName,
-    lastName,
-    country,
-    region,
-    hasAmexGold,
-    hasAmexPlatine,
-    hasVisaInfinite,
-    hasMarriottCard,
-    hasHiltonCard,
-    hasAirlineCard,
-    hasChaseCard,
-    hasCitiCard,
-    monthlySpendEur,
-    flightsPerYear,
-    preferredCabin,
-    mainBank,
-    annualIncomeRange,
-    hasExistingAmex,
-    isHomeowner,
-    mainAirline,
-    travelType,
-    departureCity,
-    flyingBlueStatus,
-    aviosStatus,
-    marriottStatus,
-    hiltonStatus,
-  };
+  const allowed = [
+    "firstName", "lastName", "country", "region",
+    "hasAmexGold", "hasAmexPlatine", "hasVisaInfinite",
+    "hasMarriottCard", "hasHiltonCard", "hasAirlineCard",
+    "hasChaseCard", "hasCitiCard",
+    "monthlySpendEur", "flightsPerYear", "preferredCabin",
+    "mainBank", "annualIncomeRange", "hasExistingAmex", "isHomeowner",
+    "mainAirline", "travelType", "departureCity",
+    "flyingBlueStatus", "aviosStatus", "marriottStatus", "hiltonStatus",
+    "newCardsLast24Months",
+    "spendTravel", "spendDining", "spendGroceries", "spendOnline", "spendOther",
+    "homeAirport", "nextTripDestination", "nextTripDate", "nextTripCabin",
+    "flyingBlueBalance", "aviosBalance", "amexMRBalance",
+  ];
+
+  const profileData: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (fields[key] !== undefined) {
+      profileData[key] = fields[key];
+    }
+  }
 
   const profile = await prisma.clientProfile.upsert({
     where: { email },
